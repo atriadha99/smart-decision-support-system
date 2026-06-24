@@ -20,6 +20,7 @@ import { calculateTOPSIS } from '../utils/topsis';
 import { calculateSMART } from '../utils/smart';
 import { calculateProfileMatching } from '../utils/pm';
 import { calculateAHP } from '../utils/ahp';
+import { calculateMOORA } from '../utils/moora';
 
 export default function CalculationPage() {
   const { 
@@ -64,6 +65,9 @@ export default function CalculationPage() {
         break;
       case 'ahp':
         res = calculateAHP(alternatives, criteria, scores);
+        break;
+      case 'moora':
+        res = calculateMOORA(alternatives, criteria, scores);
         break;
       default:
         res = null;
@@ -217,7 +221,8 @@ export default function CalculationPage() {
           { id: 'topsis', name: 'TOPSIS', desc: 'Ideal Closeness' },
           { id: 'smart', name: 'SMART', desc: 'Simple Multi-Attribute' },
           { id: 'pm', name: 'PM', desc: 'Profile Matching' },
-          { id: 'ahp', name: 'AHP', desc: 'Analytic Hierarchy' }
+          { id: 'ahp', name: 'AHP', desc: 'Analytic Hierarchy' },
+          { id: 'moora', name: 'MOORA', desc: 'Ratio Optimization' }
         ].map(method => (
           <button
             key={method.id}
@@ -282,6 +287,12 @@ export default function CalculationPage() {
                       <th className="py-3 px-6 text-center">Secondary</th>
                     </>
                   )}
+                  {activeMethod === 'moora' && (
+                    <>
+                      <th className="py-3 px-6 text-center">Benefit Sum</th>
+                      <th className="py-3 px-6 text-center">Cost Sum</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-lightBorder dark:divide-darkBorder">
@@ -311,6 +322,12 @@ export default function CalculationPage() {
                       <>
                         <td className="py-3.5 px-6 text-center text-slate-500">{row.cf}</td>
                         <td className="py-3.5 px-6 text-center text-slate-500">{row.sf}</td>
+                      </>
+                    )}
+                    {activeMethod === 'moora' && (
+                      <>
+                        <td className="py-3.5 px-6 text-center text-slate-500">{row.benefitSum}</td>
+                        <td className="py-3.5 px-6 text-center text-slate-500">{row.costSum}</td>
                       </>
                     )}
                   </tr>
@@ -697,6 +714,85 @@ export default function CalculationPage() {
             </div>
           )}
 
+          {/* MOORA DETAIL MODULE */}
+          {activeMethod === 'moora' && (
+            <div className="space-y-6">
+              
+              {/* Decision Matrix */}
+              <div className="glass-card bg-white dark:bg-darkCard p-6 space-y-4 print-card">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. Matriks Keputusan (X)</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm print-table border-collapse">
+                    <thead>
+                      <tr className="border-b border-lightBorder dark:border-darkBorder bg-slate-50 dark:bg-slate-900/30 text-xs">
+                        <th className="py-2.5 px-4 font-bold">Alternatif</th>
+                        {criteria.map((c, i) => <th key={c.id} className="py-2.5 px-4 text-center">C{i+1} ({c.name})</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.matrix.map(row => (
+                        <tr key={row.alternativeId} className="border-b border-lightBorder dark:border-darkBorder">
+                          <td className="py-2.5 px-4 font-semibold">{row.name}</td>
+                          {criteria.map(c => <td key={c.id} className="py-2.5 px-4 text-center">{row[c.id]}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Normalized Matrix */}
+              <div className="glass-card bg-white dark:bg-darkCard p-6 space-y-4 print-card">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. Matriks Normalisasi (R)</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Matriks normalisasi MOORA dihitung dengan membagi setiap sel dengan akar dari jumlah kuadrat seluruh nilai alternatif pada kriteria tersebut.
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm print-table border-collapse">
+                    <thead>
+                      <tr className="border-b border-lightBorder dark:border-darkBorder bg-slate-50 dark:bg-slate-900/30 text-xs">
+                        <th className="py-2.5 px-4 font-bold">Alternatif</th>
+                        {criteria.map((c, i) => <th key={c.id} className="py-2.5 px-4 text-center">C{i+1}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.normalized.map(row => (
+                        <tr key={row.alternativeId} className="border-b border-lightBorder dark:border-darkBorder">
+                          <td className="py-2.5 px-4 font-semibold">{row.name}</td>
+                          {criteria.map(c => <td key={c.id} className="py-2.5 px-4 text-center text-slate-500">{row[c.id]}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Weighted Matrix */}
+              <div className="glass-card bg-white dark:bg-darkCard p-6 space-y-4 print-card">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">3. Matriks Normalisasi Terbobot (V)</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm print-table border-collapse">
+                    <thead>
+                      <tr className="border-b border-lightBorder dark:border-darkBorder bg-slate-50 dark:bg-slate-900/30 text-xs">
+                        <th className="py-2.5 px-4 font-bold">Alternatif</th>
+                        {criteria.map((c, i) => <th key={c.id} className="py-2.5 px-4 text-center">C{i+1}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.weighted.map(row => (
+                        <tr key={row.alternativeId} className="border-b border-lightBorder dark:border-darkBorder">
+                          <td className="py-2.5 px-4 font-semibold">{row.name}</td>
+                          {criteria.map(c => <td key={c.id} className="py-2.5 px-4 text-center text-brand-600 dark:text-brand-400 font-medium">{row[c.id]}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+            </div>
+          )}
+
         </div>
       )}
 
@@ -711,6 +807,7 @@ export default function CalculationPage() {
           SMART menghitung utility relatif. 
           PM mencocokkan profil berdasarkan selisih gap kriteria inti/pendukung.
           AHP menggunakan sintesis prioritas.
+          MOORA menghitung selisih jumlahan bobot kriteria benefit dan cost.
         </div>
       </div>
     </div>

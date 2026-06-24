@@ -37,6 +37,7 @@ import { calculateWP } from '../utils/wp';
 import { calculateTOPSIS } from '../utils/topsis';
 import { calculateSMART } from '../utils/smart';
 import { calculateProfileMatching } from '../utils/pm';
+import { calculateMOORA } from '../utils/moora';
 
 // Palette for charts
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#f43f5e'];
@@ -56,6 +57,7 @@ export default function Dashboard() {
   let topsisResults = [];
   let smartResults = [];
   let pmResults = [];
+  let mooraResults = [];
   let chartData = [];
   let weightData = [];
   let radarData = [];
@@ -69,12 +71,14 @@ export default function Dashboard() {
     const topsis = calculateTOPSIS(alternatives, criteria, scores);
     const smart = calculateSMART(alternatives, criteria, scores);
     const pm = calculateProfileMatching(alternatives, criteria, scores);
+    const moora = calculateMOORA(alternatives, criteria, scores);
 
     sawResults = saw.results;
     wpResults = wp.results;
     topsisResults = topsis.results;
     smartResults = smart.results;
     pmResults = pm.results;
+    mooraResults = moora.results;
 
     // Weight distribution data for Pie Chart
     weightData = criteria.map(c => ({
@@ -89,6 +93,7 @@ export default function Dashboard() {
       const tRes = topsisResults.find(r => r.alternativeId === alt.id);
       const smRes = smartResults.find(r => r.alternativeId === alt.id);
       const pRes = pmResults.find(r => r.alternativeId === alt.id);
+      const mRes = mooraResults.find(r => r.alternativeId === alt.id);
 
       return {
         name: alt.name,
@@ -97,7 +102,8 @@ export default function Dashboard() {
         WP: wRes ? wRes.score : 0,
         TOPSIS: tRes ? tRes.score : 0,
         SMART: smRes ? smRes.score / 100 : 0, // scale to 0-1
-        PM: pRes ? pRes.score / 5 : 0 // scale 1-5 to 0-1
+        PM: pRes ? pRes.score / 5 : 0, // scale 1-5 to 0-1
+        MOORA: mRes ? mRes.score : 0
       };
     });
 
@@ -237,6 +243,7 @@ export default function Dashboard() {
                   <Bar dataKey="SAW" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="WP" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="TOPSIS" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="MOORA" fill="#ec4899" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -317,7 +324,7 @@ export default function Dashboard() {
           <div className="glass-card p-6 lg:col-span-2 space-y-6 bg-white dark:bg-darkCard">
             <div className="flex items-center justify-between border-b border-lightBorder dark:border-darkBorder pb-4">
               <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Rangkuman Rekomendasi Teratas</h3>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">5 Metode Standard</span>
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">6 Metode Standard</span>
             </div>
 
             <div className="overflow-x-auto">
@@ -330,6 +337,7 @@ export default function Dashboard() {
                     <th className="py-3 px-4 text-center">TOPSIS Rank</th>
                     <th className="py-3 px-4 text-center">SMART Rank</th>
                     <th className="py-3 px-4 text-center">PM Rank</th>
+                    <th className="py-3 px-4 text-center">MOORA Rank</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-lightBorder dark:divide-darkBorder">
@@ -339,6 +347,7 @@ export default function Dashboard() {
                     const topR = topsisResults.find(r => r.alternativeId === alt.id)?.rank || '-';
                     const smR = smartResults.find(r => r.alternativeId === alt.id)?.rank || '-';
                     const pmR = pmResults.find(r => r.alternativeId === alt.id)?.rank || '-';
+                    const mooraR = mooraResults.find(r => r.alternativeId === alt.id)?.rank || '-';
 
                     return (
                       <tr key={alt.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
@@ -357,6 +366,9 @@ export default function Dashboard() {
                         </td>
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-block w-6 py-0.5 rounded-md text-xs font-bold ${pmR === 1 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400' : 'text-slate-500'}`}>{pmR}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className={`inline-block w-6 py-0.5 rounded-md text-xs font-bold ${mooraR === 1 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400' : 'text-slate-500'}`}>{mooraR}</span>
                         </td>
                       </tr>
                     );

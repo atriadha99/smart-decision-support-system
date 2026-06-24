@@ -21,6 +21,7 @@ Built with **React, Vite, Tailwind CSS, React Router, Recharts, React Hook Form,
    - **SMART** (Simple Multi-Attribute Rating Technique)
    - **Profile Matching** (Core/Secondary Factors & GAP Analysis)
    - **AHP** (Analytic Hierarchy Process Synthesis)
+   - **MOORA** (Multi-Objective Optimization on the basis of Ratio Analysis)
 8. **Admin Authentication:** Protected CRUD operations.
    - **Email:** `admin@sdss.com`
    - **Password:** `admin`
@@ -143,3 +144,7 @@ smart-decision-support-system/
 ### AHP (Analytic Hierarchy Process)
 * **Eigenvector weights:** Priority vector is calculated from the normalized column average of the pairwise comparison matrix.
 * **Consistency Check:** Calculates Consistency Index (CI) and Ratio (CR). Consistent if $CR < 0.1$.
+
+### MOORA (Multi-Objective Optimization on the basis of Ratio Analysis)
+* **Normalization ($R_{ij}$):** $R_{ij} = x_{ij}/\sqrt{\sum x_{kj}^2}$
+* **Optimization Value ($y_i$):** $y_i = \sum_{j \in Benefit} V_{ij} - \sum_{j \in Cost} V_{ij}$ where $V_{ij} = R_{ij} \cdot w_j$.
