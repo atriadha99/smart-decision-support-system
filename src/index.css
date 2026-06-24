@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-lightBg text-slate-800 transition-colors duration-200 font-sans antialiased;
+  }
+  html.dark body {
+    @apply bg-darkBg text-darkText;
+  }
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  @apply bg-white/70 dark:bg-darkCard/80 backdrop-blur-md border border-lightBorder dark:border-darkBorder shadow-glass dark:shadow-glass-dark;
+}
+
+.glass-card {
+  @apply bg-white dark:bg-darkCard border border-lightBorder dark:border-darkBorder shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-800 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300 dark:bg-slate-700;
+}
+
+/* Print specific styles for reports */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-card {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: black !important;
+    break-inside: avoid;
+  }
+  .print-table {
+    border: 1px solid #cbd5e1 !important;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid #cbd5e1 !important;
+    color: black !important;
+  }
+}
