@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
     checkAuth();
 
     // Listen to Supabase auth events
-    const { data: { subscription } } = supabase.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
           email: session.user.email,

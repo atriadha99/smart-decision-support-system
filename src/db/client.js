@@ -1,17 +1,18 @@
 /**
- * Database Client - Dual Adapter Pattern
+ * Database Client - Dual Adapter Pattern (Local Storage & Neon PostgreSQL)
  * 
- * By default, this adapter implements a LocalStorage-based client so that the app
- * runs immediately out of the box with no external database dependencies.
- * 
- * To switch to Supabase PostgreSQL:
- * 1. Configure your `.env` file with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
- * 2. Change the `DB_TYPE` variable below from 'local' to 'supabase'
+ * Auto-detects if Neon connection string is present:
+ * - If VITE_NEON_DATABASE_URL is set, it routes all queries to Neon PostgreSQL via raw SQL.
+ * - Otherwise, it falls back to Local Storage mode so the app is instantly usable.
  */
 
-import { supabase } from './supabaseClient';
+import { sql } from './neonClient';
 
-const DB_TYPE = 'local'; // Options: 'local' | 'supabase'
+const DB_TYPE = import.meta.env.VITE_NEON_DATABASE_URL && 
+               !import.meta.env.VITE_NEON_DATABASE_URL.includes('placeholder') 
+               ? 'neon' : 'local';
+
+console.log(`[SDSS DB ADAPTER] Active database mode: "${DB_TYPE.toUpperCase()}"`);
 
 // ==========================================
 // SEED DATA FOR LOCAL STORAGE
@@ -142,9 +143,8 @@ const writeTable = (tableName, data) => localStorage.setItem(`sdss_${tableName}`
 export const dbClient = {
   // --- Studies ---
   async getStudies() {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('studies').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`SELECT * FROM studies ORDER BY created_at DESC`;
       return data;
     } else {
       return readTable('studies');
@@ -152,10 +152,14 @@ export const dbClient = {
   },
 
   async saveStudy(study) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('studies').upsert(study).select();
-      if (error) throw error;
-      return data[0];
+    if (DB_TYPE === 'neon' && sql) {
+      if (study.id) {
+        const data = await sql`UPDATE studies SET name = ${study.name}, description = ${study.description} WHERE id = ${study.id} RETURNING *`;
+        return data[0];
+      } else {
+        const data = await sql`INSERT INTO studies (name, description) VALUES (${study.name}, ${study.description}) RETURNING *`;
+        return data[0];
+      }
     } else {
       const studies = readTable('studies');
       if (study.id) {
@@ -180,9 +184,8 @@ export const dbClient = {
   },
 
   async deleteStudy(id) {
-    if (DB_TYPE === 'supabase') {
-      const { error } = await supabase.from('studies').delete().eq('id', id);
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      await sql`DELETE FROM studies WHERE id = ${id}`;
       return true;
     } else {
       // cascade deletes manually for local storage
@@ -207,20 +210,28 @@ export const dbClient = {
 
   // --- Criteria ---
   async getCriteria(studyId) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('criteria').select('*').eq('study_id', studyId);
-      if (error) throw error;
-      return data;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`SELECT * FROM criteria WHERE study_id = ${studyId}`;
+      return data.map(c => ({
+        ...c,
+        weight: Number(c.weight) || 0,
+        target_value: Number(c.target_value) || 3,
+        is_core_factor: c.is_core_factor === true || c.is_core_factor === 'true' || c.is_core_factor === 1
+      }));
     } else {
       return readTable('criteria').filter(c => c.study_id === studyId);
     }
   },
 
   async saveCriterion(criterion) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('criteria').upsert(criterion).select();
-      if (error) throw error;
-      return data[0];
+    if (DB_TYPE === 'neon' && sql) {
+      if (criterion.id) {
+        const data = await sql`UPDATE criteria SET name = ${criterion.name}, weight = ${Number(criterion.weight)}, type = ${criterion.type}, target_value = ${Number(criterion.target_value)}, is_core_factor = ${criterion.is_core_factor} WHERE id = ${criterion.id} RETURNING *`;
+        return data[0];
+      } else {
+        const data = await sql`INSERT INTO criteria (study_id, name, weight, type, target_value, is_core_factor) VALUES (${criterion.study_id}, ${criterion.name}, ${Number(criterion.weight)}, ${criterion.type}, ${Number(criterion.target_value)}, ${criterion.is_core_factor}) RETURNING *`;
+        return data[0];
+      }
     } else {
       const criteria = readTable('criteria');
       if (criterion.id) {
@@ -248,17 +259,29 @@ export const dbClient = {
   },
 
   async saveAllCriteria(studyId, criteriaList) {
-    if (DB_TYPE === 'supabase') {
-      // Supabase supports bulk upserts
-      const cleanList = criteriaList.map(c => ({
-        ...c,
-        study_id: studyId,
-        weight: Number(c.weight),
-        target_value: Number(c.target_value)
-      }));
-      const { data, error } = await supabase.from('criteria').upsert(cleanList).select();
-      if (error) throw error;
-      return data;
+    if (DB_TYPE === 'neon' && sql) {
+      const existingCrit = await sql`SELECT id FROM criteria WHERE study_id = ${studyId}`;
+      const existingIds = existingCrit.map(c => c.id);
+      
+      const newIds = criteriaList.map(c => c.id).filter(Boolean);
+      const toDelete = existingIds.filter(id => !newIds.includes(id));
+      
+      for (const deleteId of toDelete) {
+        await sql`DELETE FROM criteria WHERE id = ${deleteId}`;
+      }
+      
+      const results = [];
+      for (const c of criteriaList) {
+        const isCore = c.is_core_factor === 'true' || c.is_core_factor === true || c.is_core_factor === 1;
+        if (c.id) {
+          const res = await sql`UPDATE criteria SET name = ${c.name}, weight = ${Number(c.weight)}, type = ${c.type}, target_value = ${Number(c.target_value)}, is_core_factor = ${isCore} WHERE id = ${c.id} RETURNING *`;
+          results.push(res[0]);
+        } else {
+          const res = await sql`INSERT INTO criteria (study_id, name, weight, type, target_value, is_core_factor) VALUES (${studyId}, ${c.name}, ${Number(c.weight)}, ${c.type}, ${Number(c.target_value)}, ${isCore}) RETURNING *`;
+          results.push(res[0]);
+        }
+      }
+      return results;
     } else {
       const criteria = readTable('criteria').filter(c => c.study_id !== studyId);
       const updatedList = criteriaList.map(c => ({
@@ -268,7 +291,7 @@ export const dbClient = {
         weight: Number(c.weight) || 0,
         type: c.type || 'benefit',
         target_value: Number(c.target_value) ?? 3.0,
-        is_core_factor: c.is_core_factor !== undefined ? c.is_core_factor : true
+        is_core_factor: c.is_core_factor === true || c.is_core_factor === 'true' || c.is_core_factor === 1
       }));
       criteria.push(...updatedList);
       writeTable('criteria', criteria);
@@ -277,9 +300,8 @@ export const dbClient = {
   },
 
   async deleteCriterion(id) {
-    if (DB_TYPE === 'supabase') {
-      const { error } = await supabase.from('criteria').delete().eq('id', id);
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      await sql`DELETE FROM criteria WHERE id = ${id}`;
       return true;
     } else {
       const criteria = readTable('criteria').filter(c => c.id !== id);
@@ -292,9 +314,8 @@ export const dbClient = {
 
   // --- Alternatives ---
   async getAlternatives(studyId) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('alternatives').select('*').eq('study_id', studyId);
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`SELECT * FROM alternatives WHERE study_id = ${studyId}`;
       return data;
     } else {
       return readTable('alternatives').filter(a => a.study_id === studyId);
@@ -302,10 +323,21 @@ export const dbClient = {
   },
 
   async saveAlternative(alternative) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('alternatives').upsert(alternative).select();
-      if (error) throw error;
-      return data[0];
+    if (DB_TYPE === 'neon' && sql) {
+      let savedAlt = null;
+      if (alternative.id) {
+        const data = await sql`UPDATE alternatives SET name = ${alternative.name}, description = ${alternative.description}, category = ${alternative.category} WHERE id = ${alternative.id} RETURNING *`;
+        savedAlt = data[0];
+      } else {
+        const data = await sql`INSERT INTO alternatives (study_id, name, description, category) VALUES (${alternative.study_id}, ${alternative.name}, ${alternative.description}, ${alternative.category}) RETURNING *`;
+        savedAlt = data[0];
+        
+        const criteria = await sql`SELECT id FROM criteria WHERE study_id = ${alternative.study_id}`;
+        for (const crit of criteria) {
+          await sql`INSERT INTO scores (alternative_id, criteria_id, value) VALUES (${savedAlt.id}, ${crit.id}, 0) ON CONFLICT DO NOTHING`;
+        }
+      }
+      return savedAlt;
     } else {
       const alternatives = readTable('alternatives');
       if (alternative.id) {
@@ -327,7 +359,6 @@ export const dbClient = {
       alternatives.push(newAlt);
       writeTable('alternatives', alternatives);
       
-      // Auto create default scores of 0 for this alternative across existing criteria
       const criteria = readTable('criteria').filter(c => c.study_id === alternative.study_id);
       const scores = readTable('scores');
       criteria.forEach(crit => {
@@ -345,9 +376,8 @@ export const dbClient = {
   },
 
   async deleteAlternative(id) {
-    if (DB_TYPE === 'supabase') {
-      const { error } = await supabase.from('alternatives').delete().eq('id', id);
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      await sql`DELETE FROM alternatives WHERE id = ${id}`;
       return true;
     } else {
       const alternatives = readTable('alternatives').filter(a => a.id !== id);
@@ -358,17 +388,14 @@ export const dbClient = {
     }
   },
 
-  // --- Scores (Scoring Matrix) ---
+  // --- Scores ---
   async getScores(studyId) {
-    if (DB_TYPE === 'supabase') {
-      // We fetch scores for alternatives belonging to this study
-      const { data: alts } = await supabase.from('alternatives').select('id').eq('study_id', studyId);
-      const altIds = alts ? alts.map(a => a.id) : [];
-      if (altIds.length === 0) return [];
-      
-      const { data, error } = await supabase.from('scores').select('*').in('alternative_id', altIds);
-      if (error) throw error;
-      return data;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`SELECT s.* FROM scores s JOIN alternatives a ON s.alternative_id = a.id WHERE a.study_id = ${studyId}`;
+      return data.map(s => ({
+        ...s,
+        value: Number(s.value) || 0
+      }));
     } else {
       const alts = readTable('alternatives').filter(a => a.study_id === studyId);
       const altIds = alts.map(a => a.id);
@@ -377,10 +404,11 @@ export const dbClient = {
   },
 
   async saveScores(scoresList) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('scores').upsert(scoresList).select();
-      if (error) throw error;
-      return data;
+    if (DB_TYPE === 'neon' && sql) {
+      for (const s of scoresList) {
+        await sql`INSERT INTO scores (alternative_id, criteria_id, value) VALUES (${s.alternative_id}, ${s.criteria_id}, ${Number(s.value)}) ON CONFLICT (alternative_id, criteria_id) DO UPDATE SET value = EXCLUDED.value`;
+      }
+      return scoresList;
     } else {
       const scores = readTable('scores');
       scoresList.forEach(newScore => {
@@ -403,9 +431,8 @@ export const dbClient = {
 
   // --- Calculations logs ---
   async getCalculations(studyId) {
-    if (DB_TYPE === 'supabase') {
-      const { data, error } = await supabase.from('calculations').select('*').eq('study_id', studyId).order('created_at', { ascending: false });
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`SELECT * FROM calculations WHERE study_id = ${studyId} ORDER BY created_at DESC`;
       return data;
     } else {
       return readTable('calculations').filter(c => c.study_id === studyId).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -413,10 +440,8 @@ export const dbClient = {
   },
 
   async saveCalculation(studyId, method, result) {
-    if (DB_TYPE === 'supabase') {
-      const payload = { study_id: studyId, method, result };
-      const { data, error } = await supabase.from('calculations').insert(payload).select();
-      if (error) throw error;
+    if (DB_TYPE === 'neon' && sql) {
+      const data = await sql`INSERT INTO calculations (study_id, method, result) VALUES (${studyId}, ${method}, ${JSON.stringify(result)}) RETURNING *`;
       return data[0];
     } else {
       const calculations = readTable('calculations');

@@ -55,28 +55,23 @@ Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
-## Connecting to Supabase PostgreSQL
+## Connecting to Neon PostgreSQL
 
-If you wish to run the application using a live Supabase PostgreSQL database:
+If you wish to run the application using your live Neon serverless PostgreSQL database:
 
 ### 1. Execute SQL Migration
-1. Go to your **Supabase Dashboard** > **SQL Editor**.
-2. Copy the contents of `src/db/schema.sql` and run it to create tables and performance indexes.
-3. (Optional) Run the contents of `src/db/seed.sql` to populate sample data.
+1. Go to your **Neon Console** > **SQL Editor**.
+2. Copy the contents of `src/db/schema.sql` and run it to create the tables and performance indexes.
+3. (Optional) Run the contents of `src/db/seed.sql` to populate the sample data.
 
 ### 2. Set Up Environment Variables
-Create a `.env` file in the project root directory:
+Verify or edit the `.env` file in the project root directory:
 ```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_NEON_DATABASE_URL=postgresql://neondb_owner:npg_nogZlkUG4BK5@ep-tiny-cake-aoh8qih1.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 ```
 
-### 3. Activate Supabase Client
-Open [src/db/client.js](file:///src/db/client.js) and change the database configuration type at line 12:
-```javascript
-const DB_TYPE = 'supabase'; // Changed from 'local'
-```
-Restart your development server. The application will now query and write to your live PostgreSQL database.
+### 3. Automatic Adapter Activation
+The application [client.js](file:///src/db/client.js) automatically detects the presence of the `VITE_NEON_DATABASE_URL` environment variable. If it is active, the app will instantly switch from Local Storage mode to **Neon SQL database mode**. Restart your development server to load the new environment variables.
 
 ---
 
