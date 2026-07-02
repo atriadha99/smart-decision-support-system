@@ -1,145 +1,510 @@
-# Smart Decision Support System (SDSS)
+<div align="center">
 
-SDSS is a universal, web-based Decision Support System (Sistem Pendukung Keputusan / SPK) designed to support multiple decision-making methods for arbitrary, dynamic study cases (such as selecting laptops, smartphones, motorbikes, employees, or scholarship candidates).
+# ⚡ Smart Decision Support System (SDSS)
 
-Built with **React, Vite, Tailwind CSS, React Router, Recharts, React Hook Form, and Zod**. It has a **Dual-Adapter Database Architecture** that runs instantly out of the box using Local Storage and can be easily configured to connect to a live **Supabase PostgreSQL** instance.
+### Sistem Pendukung Keputusan Universal Berbasis Web
 
----
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Neon](https://img.shields.io/badge/Neon-PostgreSQL-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## Key Features
+**SDSS** adalah aplikasi Sistem Pendukung Keputusan (SPK) universal berbasis web yang mendukung **7 metode analisis multi-kriteria** untuk studi kasus yang dinamis — mulai dari pemilihan laptop, karyawan terbaik, penerima beasiswa, hingga skenario apapun yang Anda butuhkan.
 
-1. **Dashboard Analytics:** Visualizations of case studies, criteria weight distribution (Pie Chart), alternative performance profiles (Radar Chart), and overall ranking comparison (Bar Chart).
-2. **Universal Case Study Management:** Complete CRUD interface to create, edit, or delete arbitrary study cases.
-3. **Criteria & Weight Management:** CRUD for criteria, weight validations ($\sum W_j = 1.0$), and a **"Normalkan Bobot" (Normalize Weights)** button to scale weights instantly.
-4. **Interactive AHP Weights Modeler:** Inside the criteria page, users can build a pairwise comparison matrix to automatically calculate weights, checking the Consistency Ratio (CR < 0.1) in real-time before applying them.
-5. **Alternative Management:** CRUD for alternative choices, supporting categorization and tags.
-6. **Dynamic Scoring Matrix:** Grid interface to fill evaluations for each alternative across all criteria.
-7. **Step-by-Step SPK Algorithms:** Visualizes intermediate matrices and steps for:
-   - **SAW** (Simple Additive Weighting)
-   - **WP** (Weighted Product)
-   - **TOPSIS** (Technique for Order Preference by Similarity to Ideal Solution)
-   - **SMART** (Simple Multi-Attribute Rating Technique)
-   - **Profile Matching** (Core/Secondary Factors & GAP Analysis)
-   - **AHP** (Analytic Hierarchy Process Synthesis)
-   - **MOORA** (Multi-Objective Optimization on the basis of Ratio Analysis)
-8. **Admin Authentication:** Protected CRUD operations.
-   - **Email:** `admin@sdss.com`
-   - **Password:** `admin`
-9. **Premium UI/UX:** Responsive mobile-first layout, dark mode, smooth transitions, custom scrollbars, and print-ready styles for exporting PDF reports.
-10. **Reports Suite:** Print PDF reports, export Excel-compatible CSVs, and save calculation logs to database history.
+[Mulai Sekarang](#-quick-start) · [Fitur](#-fitur-utama) · [Screenshot](#-screenshot) · [Metode SPK](#-metode-spk) · [Arsitektur](#-arsitektur)
+
+</div>
 
 ---
 
-## Installation & Quick Start
+## 📋 Daftar Isi
 
-### 1. Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
+- [Fitur Utama](#-fitur-utama)
+- [Screenshot](#-screenshot)
+- [Quick Start](#-quick-start)
+- [Metode SPK](#-metode-spk)
+- [Arsitektur](#-arsitektur)
+- [Struktur Proyek](#-struktur-proyek)
+- [Koneksi Database Cloud](#-koneksi-ke-neon-postgresql)
+- [Rumus Teknis](#-rumus-teknis)
+- [Tech Stack](#-tech-stack)
+- [Informasi Pengembang](#-informasi-pengembang)
 
-### 2. Clone/Open the Project Directory
-Navigate to the root directory `smart-decision-support-system`:
+---
+
+## ✨ Fitur Utama
+
+<table>
+<tr>
+<td width="50%">
+
+### 📊 Dashboard Analitik
+Visualisasi lengkap studi kasus aktif:
+- **Pie Chart** — Distribusi bobot kriteria
+- **Radar Chart** — Profil performa alternatif
+- **Bar Chart** — Perbandingan ranking keseluruhan
+- Statistik ringkasan (jumlah studi, kriteria, alternatif, perhitungan)
+
+</td>
+<td width="50%">
+
+### 🧮 7 Metode Perhitungan SPK
+Visualisasi **step-by-step** matriks intermediat:
+- **SAW** — Simple Additive Weighting
+- **WP** — Weighted Product
+- **TOPSIS** — Ideal Solution Similarity
+- **SMART** — Multi-Attribute Rating Technique
+- **Profile Matching** — GAP & Core/Secondary Factor
+- **AHP** — Analytic Hierarchy Process
+- **MOORA** — Multi-Objective Ratio Analysis
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🗂️ Manajemen Studi Kasus Universal
+- CRUD lengkap untuk studi kasus yang bersifat **dinamis**
+- Satu sistem untuk **semua skenario keputusan**
+- Search, pagination, dan status tracking
+- Auto-seed data sample untuk demo instan
+
+</td>
+<td width="50%">
+
+### ⚖️ Kriteria & AHP Weights Modeler
+- CRUD kriteria dengan tipe **Benefit/Cost**
+- Validasi otomatis total bobot (∑W = 1.0)
+- Tombol **"Normalkan Bobot"** untuk normalisasi instan
+- **Matriks perbandingan berpasangan AHP** interaktif
+- Pengecekan **Consistency Ratio (CR < 0.1)** real-time
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🔐 Autentikasi Admin
+- Route guard untuk operasi CRUD
+- Halaman login dengan validasi form
+- Mode baca publik (Dashboard & Perhitungan)
+- **Default:** `admin@sdss.com` / `admin`
+
+</td>
+<td width="50%">
+
+### 📤 Ekspor Laporan
+- **Cetak PDF** langsung dari browser
+- **Ekspor CSV** kompatibel Excel
+- **Simpan log** perhitungan ke histori database
+- Print-ready styles untuk output profesional
+
+</td>
+</tr>
+</table>
+
+### 🎨 Premium UI/UX
+
+> Layout responsif **mobile-first**, dark mode, gradient banner, transisi halus, custom scrollbar, dan desain modern dengan font **Outfit** dari Google Fonts.
+
+---
+
+## 📸 Screenshot
+
+### Halaman Dashboard
+
+Dashboard utama menampilkan hero banner, statistik ringkasan, dan visualisasi chart untuk studi kasus aktif.
+
+<div align="center">
+<img src="docs/screenshots/dashboard.png" alt="Dashboard SDSS" width="90%"/>
+</div>
+
+### Halaman Login Admin
+
+Form login admin dengan validasi, eye-toggle password, dan kredensial default untuk kemudahan demo.
+
+<div align="center">
+<img src="docs/screenshots/login.png" alt="Login Admin" width="70%"/>
+</div>
+
+### Manajemen Studi Kasus
+
+Interface CRUD untuk mengelola studi kasus SPK dengan tabel, search, dan aksi (Edit/Hapus).
+
+<div align="center">
+<img src="docs/screenshots/case-management.png" alt="Manajemen Studi Kasus" width="90%"/>
+</div>
+
+### Manajemen Kriteria
+
+Definisi kriteria penilaian dengan bobot, tipe benefit/cost, target value, dan core/secondary factor.
+
+<div align="center">
+<img src="docs/screenshots/criteria.png" alt="Manajemen Kriteria" width="90%"/>
+</div>
+
+### Manajemen Alternatif
+
+Pengelolaan alternatif keputusan dengan nama, deskripsi, dan kategori.
+
+<div align="center">
+<img src="docs/screenshots/alternatives.png" alt="Manajemen Alternatif" width="90%"/>
+</div>
+
+### Input Penilaian (Scoring Matrix)
+
+Grid interface untuk mengisi nilai evaluasi setiap alternatif terhadap semua kriteria.
+
+<div align="center">
+<img src="docs/screenshots/scoring.png" alt="Scoring Matrix" width="90%"/>
+</div>
+
+### Perhitungan & Hasil
+
+Jalankan perhitungan SPK, pilih metode, dan lihat hasil ranking beserta langkah intermediat.
+
+<div align="center">
+<img src="docs/screenshots/calculation.png" alt="Perhitungan & Hasil" width="90%"/>
+</div>
+
+---
+
+## 🚀 Quick Start
+
+### Prasyarat
+
+- [**Node.js**](https://nodejs.org/) v18 atau lebih baru
+- **NPM** (sudah termasuk dalam Node.js)
+
+### Instalasi & Jalankan
+
 ```bash
+# 1. Clone repository
+git clone https://github.com/username/smart-decision-support-system.git
 cd smart-decision-support-system
-```
 
-### 3. Install Dependencies
-```bash
+# 2. Install dependencies
 npm install
-```
 
-### 4. Run the Dev Server
-```bash
+# 3. Jalankan development server
 npm run dev
 ```
-Open your browser and navigate to `http://localhost:5173`.
-*Note: The application will boot in **Local Storage mode** and auto-seed sample studies (Laptop selection and Employee selection) so it is fully functional instantly.*
+
+🌐 Buka browser ke **http://localhost:5173**
+
+> **💡 Catatan:** Aplikasi langsung berjalan dalam **mode Local Storage** dan otomatis menyediakan data sample (Pemilihan Laptop & Pemilihan Karyawan Terbaik) sehingga fungsional tanpa konfigurasi tambahan.
+
+### 🔑 Kredensial Admin
+
+| Field | Value |
+|---|---|
+| **Email** | `admin@sdss.com` |
+| **Password** | `admin` |
 
 ---
 
-## Connecting to Neon PostgreSQL
+## 🧮 Metode SPK
 
-If you wish to run the application using your live Neon serverless PostgreSQL database:
+SDSS mendukung **7 metode perhitungan** Sistem Pendukung Keputusan, lengkap dengan visualisasi step-by-step:
 
-### 1. Execute SQL Migration
-1. Go to your **Neon Console** > **SQL Editor**.
-2. Copy the contents of `src/db/schema.sql` and run it to create the tables and performance indexes.
-3. (Optional) Run the contents of `src/db/seed.sql` to populate the sample data.
+| # | Metode | Singkatan | Pendekatan |
+|---|---|---|---|
+| 1 | Simple Additive Weighting | **SAW** | Normalisasi linear + penjumlahan berbobot |
+| 2 | Weighted Product | **WP** | Perkalian berpangkat bobot |
+| 3 | Technique for Order Preference by Similarity to Ideal Solution | **TOPSIS** | Jarak ke solusi ideal positif & negatif |
+| 4 | Simple Multi-Attribute Rating Technique | **SMART** | Utility range-scaling + bobot |
+| 5 | Profile Matching | **PM** | GAP analysis + Core/Secondary Factor |
+| 6 | Analytic Hierarchy Process | **AHP** | Perbandingan berpasangan + konsistensi |
+| 7 | Multi-Objective Optimization on the basis of Ratio Analysis | **MOORA** | Optimasi rasio multi-objektif |
 
-### 2. Set Up Environment Variables
-Verify or edit the `.env` file in the project root directory:
-```env
-VITE_NEON_DATABASE_URL=postgresql://neondb_owner:npg_nogZlkUG4BK5@ep-tiny-cake-aoh8qih1.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+Setiap metode menampilkan:
+- ✅ Matriks keputusan awal
+- ✅ Matriks normalisasi
+- ✅ Matriks berbobot
+- ✅ Perhitungan intermediat (jarak, utility, GAP, dll.)
+- ✅ Tabel ranking akhir
+
+---
+
+## 🏗️ Arsitektur
+
+### Dual-Adapter Database
+
+SDSS menggunakan arsitektur **Dual-Adapter Database** yang memungkinkan aplikasi berjalan dalam dua mode tanpa perubahan kode:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    SDSS Frontend                     │
+│              (React + Vite + Tailwind)               │
+└───────────────────────┬─────────────────────────────┘
+                        │
+                   ┌────▼────┐
+                   │ client  │  ← Auto-detects env var
+                   │  .js    │
+                   └────┬────┘
+                        │
+            ┌───────────┼───────────┐
+            │                       │
+   ┌────────▼────────┐    ┌────────▼────────┐
+   │  Local Storage  │    │ Neon PostgreSQL  │
+   │    Adapter      │    │    Adapter       │
+   │  (Default)      │    │  (Cloud Mode)    │
+   └────────┬────────┘    └────────┬────────┘
+            │                       │
+   ┌────────▼────────┐    ┌────────▼────────┐
+   │ Browser Storage │    │ Neon Serverless  │
+   │  (Instant Use)  │    │   PostgreSQL     │
+   └─────────────────┘    └─────────────────┘
 ```
 
-### 3. Automatic Adapter Activation
-The application [client.js](file:///src/db/client.js) automatically detects the presence of the `VITE_NEON_DATABASE_URL` environment variable. If it is active, the app will instantly switch from Local Storage mode to **Neon SQL database mode**. Restart your development server to load the new environment variables.
+**Cara kerja:**
+- Jika `VITE_NEON_DATABASE_URL` **tidak ada** atau berisi `placeholder` → **Local Storage mode** (default)
+- Jika `VITE_NEON_DATABASE_URL` **aktif** → **Neon PostgreSQL mode** (cloud)
+
+### Routing & Guard
+
+```
+/              → Dashboard (Public)
+/calculate     → Perhitungan & Hasil (Public)
+/login         → Halaman Login (Standalone)
+/studies       → Manajemen Studi Kasus (Admin Only)
+/criteria      → Manajemen Kriteria (Admin Only)
+/alternatives  → Manajemen Alternatif (Admin Only)
+/scores        → Input Penilaian (Admin Only)
+```
 
 ---
 
-## Directory Structure
+## 📁 Struktur Proyek
 
 ```
 smart-decision-support-system/
-├── public/
+│
+├── 📂 public/
 │   └── favicon.ico
-├── src/
-│   ├── components/      # Shared UI Components (Layout, ThemeToggle, Navbar, Modal)
-│   ├── context/         # React state providers (Theme, Auth, Database contexts)
-│   ├── db/              # SQL Migrations, Seed Data, Local DB Client, Supabase client
-│   │   ├── client.js    # Dual-adapter DB manager (local vs live database)
-│   │   ├── schema.sql   # PostgreSQL Schema
-│   │   ├── seed.sql     # PostgreSQL Seed Data
-│   │   └── supabaseClient.js # Supabase connection setup
-│   ├── pages/           # Pages (Dashboard, CaseManagement, Criteria, Alternatives, Scoring, Calculation, Auth)
-│   ├── utils/           # SPK Core Mathematical algorithms
-│   │   ├── saw.js
-│   │   ├── wp.js
-│   │   ├── topsis.js
-│   │   ├── smart.js
-│   │   ├── pm.js
-│   │   └── ahp.js
-│   ├── App.jsx          # Route declarations & admin guards
-│   ├── index.css        # Tailwind and print CSS
-│   └── main.jsx         # DOM mounting
-├── package.json
-├── tailwind.config.js   # Custom dark themes and Outfit font setup
-├── postcss.config.js
-├── vite.config.js
-└── README.md
+│
+├── 📂 src/
+│   ├── 📂 components/                  # Komponen UI Bersama
+│   │   ├── Layout.jsx                  #   Layout utama (Sidebar + Content)
+│   │   ├── Modal.jsx                   #   Komponen dialog modal
+│   │   └── ThemeToggle.jsx             #   Toggle dark/light mode
+│   │
+│   ├── 📂 context/                     # React Context Providers
+│   │   ├── AuthContext.jsx             #   State & logic autentikasi
+│   │   ├── DatabaseContext.jsx         #   State database & studi aktif
+│   │   └── ThemeContext.jsx            #   State tema (dark/light)
+│   │
+│   ├── 📂 db/                          # Database Layer
+│   │   ├── client.js                   #   ⭐ Dual-adapter manager
+│   │   ├── neonClient.js              #   Koneksi Neon PostgreSQL
+│   │   ├── schema.sql                  #   Schema SQL & indexes
+│   │   ├── seed.sql                    #   Data seed PostgreSQL
+│   │   └── supabaseClient.js           #   Koneksi Supabase (opsional)
+│   │
+│   ├── 📂 pages/                       # Halaman Aplikasi
+│   │   ├── Dashboard.jsx               #   Dashboard & analitik
+│   │   ├── CaseManagement.jsx          #   CRUD studi kasus
+│   │   ├── CriteriaManagement.jsx      #   CRUD kriteria + AHP Modeler
+│   │   ├── AlternativeManagement.jsx   #   CRUD alternatif
+│   │   ├── ScoringMatrix.jsx           #   Input matriks penilaian
+│   │   ├── CalculationPage.jsx         #   Perhitungan & hasil SPK
+│   │   └── LoginPage.jsx               #   Login admin
+│   │
+│   ├── 📂 utils/                       # Algoritma Inti SPK
+│   │   ├── saw.js                      #   Simple Additive Weighting
+│   │   ├── wp.js                       #   Weighted Product
+│   │   ├── topsis.js                   #   TOPSIS
+│   │   ├── smart.js                    #   SMART
+│   │   ├── pm.js                       #   Profile Matching
+│   │   ├── ahp.js                      #   Analytic Hierarchy Process
+│   │   └── moora.js                    #   MOORA
+│   │
+│   ├── App.jsx                         # Route declarations & admin guards
+│   ├── App.css                         # Custom styles
+│   ├── index.css                       # Tailwind base & print CSS
+│   └── main.jsx                        # DOM mounting
+│
+├── .env                                # Environment variables
+├── capacitor.config.json               # Capacitor mobile config
+├── package.json                        # Dependencies & scripts
+├── tailwind.config.js                  # Custom theme & Outfit font
+├── postcss.config.js                   # PostCSS config
+├── vite.config.js                      # Vite config
+└── README.md                           # Dokumentasi ini
 ```
 
 ---
 
-## Technical Formulas Summary
+## ☁️ Koneksi ke Neon PostgreSQL
 
-### SAW (Simple Additive Weighting)
-* **Normalization ($R$):**
-  - Benefit: $R_{ij} = x_{ij}/\max(x_{kj})$
-  - Cost: $R_{ij} = \min(x_{kj})/x_{ij}$
-* **Score ($V_i$):** $V_i = \sum w_j \cdot R_{ij}$
+Untuk menjalankan aplikasi dengan database cloud **Neon Serverless PostgreSQL**:
 
-### WP (Weighted Product)
-* **Vektor S ($S_i$):** $S_i = \prod x_{ij}^{w'_j}$ (where $w'_j$ is negative for cost criteria).
-* **Vektor V ($V_i$):** $V_i = S_i / \sum S_k$
+### 1️⃣ Jalankan SQL Migration
 
-### TOPSIS
-* **Normalization ($R_{ij}$):** $R_{ij} = x_{ij}/\sqrt{\sum x_{kj}^2}$
-* **Ideal Solutions ($A^+$/$A^-$):** Extreme boundaries of weighted normalized values ($V_{ij} = R_{ij} \cdot w_j$).
-* **Distances ($D^+_i$/$D^-_i$):** Euclidean distance to ideal positives and negatives.
-* **Preference ($V_i$):** $V_i = D^-_i / (D^+_i + D^-_i)$
+Buka **Neon Console** > **SQL Editor**, lalu jalankan:
 
-### SMART
-* **Utility ($U_{ij}$):** Range-scaling: $U_{ij} = 100 \cdot (x_{ij} - \min)/(\max - \min)$ for benefit, reversed for cost.
-* **Final Value ($V_i$):** $V_i = \sum w_j \cdot U_{ij}$
+```sql
+-- File: src/db/schema.sql
+-- Membuat 5 tabel: studies, criteria, alternatives, scores, calculations
+-- Beserta indexes untuk performa query
+```
 
-### Profile Matching
-* **GAP:** $GAP_{ij} = x_{ij} - Target_j$.
-* **Weight mapping:** Maps gap integer levels to weights (0 gap = 5 weight, etc.).
-* **Total Score:** $Total_i = 0.6 \cdot CF_i + 0.4 \cdot SF_i$ (where CF/SF is average weight of Core/Secondary criteria).
+Opsional, jalankan `src/db/seed.sql` untuk data sample.
 
-### AHP (Analytic Hierarchy Process)
-* **Eigenvector weights:** Priority vector is calculated from the normalized column average of the pairwise comparison matrix.
-* **Consistency Check:** Calculates Consistency Index (CI) and Ratio (CR). Consistent if $CR < 0.1$.
+### 2️⃣ Konfigurasi Environment Variable
 
-### MOORA (Multi-Objective Optimization on the basis of Ratio Analysis)
-* **Normalization ($R_{ij}$):** $R_{ij} = x_{ij}/\sqrt{\sum x_{kj}^2}$
-* **Optimization Value ($y_i$):** $y_i = \sum_{j \in Benefit} V_{ij} - \sum_{j \in Cost} V_{ij}$ where $V_{ij} = R_{ij} \cdot w_j$.
+Edit file `.env` di root proyek:
+
+```env
+VITE_NEON_DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+```
+
+### 3️⃣ Restart Dev Server
+
+```bash
+# Ctrl+C untuk stop, lalu
+npm run dev
+```
+
+Aplikasi otomatis mendeteksi environment variable dan beralih ke mode database cloud. Cek console browser untuk konfirmasi:
+
+```
+[SDSS DB ADAPTER] Active database mode: "NEON"
+```
+
+---
+
+## 📐 Rumus Teknis
+
+<details>
+<summary><b>SAW — Simple Additive Weighting</b></summary>
+
+**Normalisasi (R):**
+- Benefit: `R_ij = x_ij / max(x_kj)`
+- Cost: `R_ij = min(x_kj) / x_ij`
+
+**Skor Preferensi:**
+- `V_i = Σ(w_j × R_ij)`
+
+</details>
+
+<details>
+<summary><b>WP — Weighted Product</b></summary>
+
+**Vektor S:**
+- `S_i = Π(x_ij ^ w'_j)` — dimana `w'_j` negatif untuk kriteria cost
+
+**Vektor V:**
+- `V_i = S_i / Σ(S_k)`
+
+</details>
+
+<details>
+<summary><b>TOPSIS — Ideal Solution Similarity</b></summary>
+
+**Normalisasi:**
+- `R_ij = x_ij / √(Σ x_kj²)`
+
+**Solusi Ideal:**
+- `A⁺` = max (benefit), min (cost)
+- `A⁻` = min (benefit), max (cost)
+
+**Jarak & Preferensi:**
+- `D⁺_i = √(Σ(V_ij - A⁺_j)²)`
+- `D⁻_i = √(Σ(V_ij - A⁻_j)²)`
+- `C_i = D⁻_i / (D⁺_i + D⁻_i)`
+
+</details>
+
+<details>
+<summary><b>SMART — Multi-Attribute Rating Technique</b></summary>
+
+**Utility:**
+- Benefit: `U_ij = 100 × (x_ij - min) / (max - min)`
+- Cost: `U_ij = 100 × (max - x_ij) / (max - min)`
+
+**Nilai Akhir:**
+- `V_i = Σ(w_j × U_ij)`
+
+</details>
+
+<details>
+<summary><b>Profile Matching — GAP Analysis</b></summary>
+
+**GAP:**
+- `GAP_ij = x_ij - Target_j`
+
+**Mapping GAP → Bobot:**
+- 0 → 5.0, ±1 → 4.5/4.0, ±2 → 3.5/3.0, dst.
+
+**Total Skor:**
+- `Total_i = 0.6 × CF_i + 0.4 × SF_i`
+
+</details>
+
+<details>
+<summary><b>AHP — Analytic Hierarchy Process</b></summary>
+
+**Bobot Eigenvector:**
+- Priority vector = rata-rata baris matriks ternormalisasi
+
+**Konsistensi:**
+- `CI = (λ_max - n) / (n - 1)`
+- `CR = CI / RI` — Konsisten jika `CR < 0.1`
+
+**Tabel Random Index (RI):**
+| n | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|
+| RI | 0.58 | 0.90 | 1.12 | 1.24 | 1.32 | 1.41 | 1.45 | 1.49 |
+
+</details>
+
+<details>
+<summary><b>MOORA — Multi-Objective Ratio Analysis</b></summary>
+
+**Normalisasi:**
+- `R_ij = x_ij / √(Σ x_kj²)`
+
+**Nilai Optimasi:**
+- `y_i = Σ V_ij(benefit) - Σ V_ij(cost)`
+- dimana `V_ij = R_ij × w_j`
+
+</details>
+
+---
+
+## 🛠️ Tech Stack
+
+| Kategori | Teknologi | Fungsi |
+|---|---|---|
+| ⚛️ Frontend | **React 19** | UI library |
+| ⚡ Build Tool | **Vite 8** | Bundler & dev server |
+| 🎨 Styling | **Tailwind CSS 3** | Utility-first CSS |
+| 🧭 Routing | **React Router 7** | Client-side navigation |
+| 📊 Charts | **Recharts 3** | Pie, Bar, Radar charts |
+| 📝 Forms | **React Hook Form 7** | Form management |
+| ✅ Validation | **Zod 4** | Schema validation |
+| 🎯 Icons | **Lucide React** | Modern icon library |
+| 🐘 Database | **Neon PostgreSQL** | Serverless cloud DB |
+| 💾 Fallback DB | **Local Storage** | Browser-based storage |
+| 📱 Mobile | **Capacitor 8** | Cross-platform build |
+
+---
+
+## 👨‍💻 Informasi Pengembang
+
+| | |
+|---|---|
+| **Nama** | Andika Agung Triadha |
+| **NIM** | 231011400165 |
+
+---
+
+<div align="center">
+
+**⭐ Star repository ini jika bermanfaat!**
+
+Dibuat dengan ❤️ menggunakan React + Vite + Tailwind CSS
+
+</div>
